@@ -30,8 +30,10 @@ SCRIPT_NAME="${SCRIPT_NAME##/*/}"
 SCRIPT_BASE_DIR="$(cd "$( dirname "$0")" && pwd )"
 
 # This should probably be the right way - didn't have time to experiment though
-# declare -r INTERACTIVE_MODE="$([ tty --silent ] && echo on || echo off)"
-declare -r INTERACTIVE_MODE=$([ "$(uname)" == "Linux" ] && echo "on" || echo "off")
+# declare INTERACTIVE_MODE="$([ tty --silent ] && echo on || echo off)"
+if [ "$INTERACTIVE_MODE" == "" ]; then
+	declare INTERACTIVE_MODE=$([ "$(uname)" == "Linux" ] && echo "on" || echo "off")
+fi
 
 #------------------------------------------------------------------------------
 # Begin Help Section
@@ -53,19 +55,19 @@ usage() {
 if [[ "${INTERACTIVE_MODE}" == "off" ]]
 then
     # Then we don't care about log colors
-    declare -r LOG_DEFAULT_COLOR=""
-    declare -r LOG_ERROR_COLOR=""
-    declare -r LOG_INFO_COLOR=""
-    declare -r LOG_SUCCESS_COLOR=""
-    declare -r LOG_WARN_COLOR=""
-    declare -r LOG_DEBUG_COLOR=""
+    declare LOG_DEFAULT_COLOR=""
+    declare LOG_ERROR_COLOR=""
+    declare LOG_INFO_COLOR=""
+    declare LOG_SUCCESS_COLOR=""
+    declare LOG_WARN_COLOR=""
+    declare LOG_DEBUG_COLOR=""
 else
-    declare -r LOG_DEFAULT_COLOR="\033[0m"
-    declare -r LOG_ERROR_COLOR="\033[1;31m"
-    declare -r LOG_INFO_COLOR="\033[1m"
-    declare -r LOG_SUCCESS_COLOR="\033[1;32m"
-    declare -r LOG_WARN_COLOR="\033[1;33m"
-    declare -r LOG_DEBUG_COLOR="\033[1;34m"
+    declare LOG_DEFAULT_COLOR="\033[0m"
+    declare LOG_ERROR_COLOR="\033[1;31m"
+    declare LOG_INFO_COLOR="\033[1m"
+    declare LOG_SUCCESS_COLOR="\033[1;32m"
+    declare LOG_WARN_COLOR="\033[1;33m"
+    declare LOG_DEBUG_COLOR="\033[1;34m"
 fi
 
 # This function scrubs the output of any control characters used in colorized output
@@ -85,11 +87,23 @@ log() {
     [[ -z ${log_level} ]] && log_level="INFO";
     [[ -z ${log_color} ]] && log_color="${LOG_INFO_COLOR}";
 
-    echo -e "${log_color}[$(date +"%Y-%m-%d %H:%M:%S %Z")] [${log_level}] ${log_text} ${LOG_DEFAULT_COLOR}";
+	if [ "$1" != "@" ]; then
+    	echo -e "${log_color}[$(date +"%x %X")] [${log_level}] ${log_text} ${LOG_DEFAULT_COLOR}";
+	else
+		set +e
+		# If there are no parameters read from stdin
+		while read log_text; do
+    		echo -e "${log_color}[$(date +"%x %X")] [${log_level}] ${log_text} ${LOG_DEFAULT_COLOR}";
+		done
+		set -e
+	fi
+
     return 0;
 }
 
-log_info()      { log "$@"; }
+log_info()      {
+	log "${@:-@}";
+}
 
 # Using espeak on Linux
 log_speak() {
@@ -101,10 +115,10 @@ log_speak() {
     return 0;
 }
 
-log_success()   { log "$1" "SUCCESS" "${LOG_SUCCESS_COLOR}"; }
-log_error()     { log "$1" "ERROR" "${LOG_ERROR_COLOR}"; }
-log_warning()   { log "$1" "WARNING" "${LOG_WARN_COLOR}"; }
-log_debug()     { log "$1" "DEBUG" "${LOG_DEBUG_COLOR}"; }
+log_success()   { log "${1:-@}" "SUCCESS" "${LOG_SUCCESS_COLOR}"; }
+log_error()     { log "${1:-@}" "ERROR" "${LOG_ERROR_COLOR}"; }
+log_warning()   { log "${1:-@}" "WARNING" "${LOG_WARN_COLOR}"; }
+log_debug()     { log "${1:-@}" "DEBUG" "${LOG_DEBUG_COLOR}"; }
 log_captains()  {
     if type -P figlet >/dev/null;
     then
@@ -146,4 +160,3 @@ log_campfire() {
 
 # End Logging Section
 #-------------------------------------------------------------------------------
-
