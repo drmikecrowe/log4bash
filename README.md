@@ -35,7 +35,7 @@ Fred Palmer
 
 ### Colorized Output
 
-[!Colorized Output](https://img.skitch.com/20110526-46e6ng8hj11pshw2s5my7e841.jpg)
+[![](https://img.skitch.com/20110526-46e6ng8hj11pshw2s5my7e841.jpg)](https://img.skitch.com/20110526-46e6ng8hj11pshw2s5my7e841.jpg)
 
 ### Logging Levels
 
@@ -100,7 +100,8 @@ Using this log message:
 
 creates this log in logz.io:
 
-[!logz.io screenshot](https://ibin.co/3MY2Qhc4G0Ef.png)
+![logz.io screenshot](https://ibin.co/3MY2Qhc4G0Ef.png "logz.io Screenshot")
+
 
 Configuration Variables
 
