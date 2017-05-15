@@ -35,7 +35,7 @@ Fred Palmer
 
 ### Colorized Output
 
-![(https://img.skitch.com/20110526-46e6ng8hj11pshw2s5my7e841.jpg)](https://img.skitch.com/20110526-46e6ng8hj11pshw2s5my7e841.jpg "Colorized Output")
+![Colorized Output](https://img.skitch.com/20110526-46e6ng8hj11pshw2s5my7e841.jpg "Colorized Output")
 
 ### Logging Levels
 
