@@ -35,7 +35,7 @@ Fred Palmer
 
 ### Colorized Output
 
-[![](https://img.skitch.com/20110526-46e6ng8hj11pshw2s5my7e841.jpg)](https://img.skitch.com/20110526-46e6ng8hj11pshw2s5my7e841.jpg)
+[!Colorized Output](https://img.skitch.com/20110526-46e6ng8hj11pshw2s5my7e841.jpg)
 
 ### Logging Levels
 
@@ -64,10 +64,52 @@ Fred Palmer
 * **log_captains**
 
     If the *figlet* program is installed this will print out an ascii-art depiction of the phrase passed to the function.
-    
+
 * **log_campfire**
 
     Posts a message to your campfire configured by setting the variables for **CAMPFIRE_API_AUTH_TOKEN** and **CAMPFIRE_NOTIFICATION_URL**.
+
+### logz.io Integration
+
+This fork of log4ash.sh may also automatically post log messages to your logz.io account.  Requires setting **LOGZ_TOKEN** prior to any debugging messages.  The "level" of the log entry is set to the appropriate level based on the `log_debug`, `log_info`, etc log commands.
+
+* NOTE: This feature requires awk to prepare the message.  This should not be an issue on most systems, as it's already included
+
+By default, includes a "meta" JSON structure that can be configured with environment variables.  This allows advanced searching with logz.io.  By default, the standard JSON included in each log entry is:
+
+    "meta": {
+      "level": "DEBUG",
+      "type": "bash"
+    }
+
+To include additional fields in this object, simply export a variable as follows:
+
+    export LOGZ_META_env=$NODE_ENV
+
+The resultant JSON would now be:
+
+    "meta": {
+      "env": "production",
+      "level": "DEBUG",
+      "type": "bash"
+    }
+
+Using this log message:
+
+    log_debug "Migrating database to latest version"
+
+creates this log in logz.io:
+
+[!logz.io screenshot](https://ibin.co/3MY2Qhc4G0Ef.png)
+
+Configuration Variables
+
+* `LOGZ_SCHEME` -- default: "http"
+* `LOGZ_HOST` -- default: "listener.logz.io"
+* `LOGZ_PORT` -- default: "8070"
+* `LOGZ_META_type` -- default: "bash"
+* `LOGZ_ENABLE` -- default: "no"
+
 
 ### Other Useful Tidbits
 

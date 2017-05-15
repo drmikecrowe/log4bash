@@ -51,6 +51,18 @@ usage() {
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
+# Begin LogZ.io setup
+
+LOGZ_SCHEME=${LOGZ_SCHEME:-http}
+LOGZ_HOST=${LOGZ_HOST:-listener.logz.io}
+LOGZ_PORT=${LOGZ_PORT:-8070}
+LOGZ_URL="$LOGZ_SCHEME://$LOGZ_HOST:$LOGZ_PORT?token=$LOGZ_TOKEN"
+LOGZ_META_type=${LOGZ_META_type:-bash}
+LOGZ_ENABLE=${LOGZ_ENABLE:-no}
+
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
 # Begin Logging Section
 if [[ "${INTERACTIVE_MODE}" == "off" ]]
 then
@@ -83,17 +95,21 @@ log() {
     local log_level="$2"
     local log_color="$3"
 
+	LOGZ_META_level=$log_level
+
     # Default level to "info"
     [[ -z ${log_level} ]] && log_level="INFO";
     [[ -z ${log_color} ]] && log_color="${LOG_INFO_COLOR}";
 
 	if [ "$1" != "@" ]; then
     	echo -e "${log_color}[$(date +"%x %X")] [${log_level}] ${log_text} ${LOG_DEFAULT_COLOR}";
+		log_logzio "${log_level,,}" "${log_text}"
 	else
 		set +e
 		# If there are no parameters read from stdin
 		while read log_text; do
     		echo -e "${log_color}[$(date +"%x %X")] [${log_level}] ${log_text} ${LOG_DEFAULT_COLOR}";
+			log_logzio "${log_level,,}" "${log_text}"
 		done
 		set -e
 	fi
@@ -154,6 +170,51 @@ log_campfire() {
         --header 'Content-Type: application/json'                   \
         --data "${campfire_message}"                                \
         ${CAMPFIRE_NOTIFICATION_URL}
+    return $?;
+}
+
+log_logzio() {
+	if [ "$LOGZ_ENABLE" != "yes" ]; then
+		return 0
+	fi
+
+	# This function performs a logz.io dump with the arguments passed to it
+	if [[ -z ${LOGZ_TOKEN} ]]; then
+		log_warning "LOGZ_TOKEN must be set in order log to logz.io."
+		return 1;
+	fi
+
+	LEVEL="$1"
+	shift
+
+	LOGZ_AWK=/tmp/.logz.awk
+	LOGZ_JSON=$(mktemp)
+
+	if [ ! -f $LOGZ_AWK ]; then
+		cat <<EOS > /tmp/.logz.awk
+BEGIN { ret=""; first=1 }
+/^LOGZ_META_/ {
+	if (first==1)
+	 	first = 0;
+	else
+		ret = ret ", ";
+	key=\$1
+	gsub(/LOGZ_META_/, "", key);
+	val=\$2
+	ret = ret "\"" key "\": \"" val "\""
+}
+END { print ret }
+EOS
+	fi
+
+	local logz_meta=$(set | awk -F "=" -f $LOGZ_AWK)
+	cat <<EOS > $LOGZ_JSON
+{ "message": "$@", "level": "$LEVEL", "meta": { $logz_meta } }
+EOS
+
+	cat $LOGZ_JSON | curl -X POST ${LOGZ_URL} --header 'Content-Type: application/json' --data-binary @-
+
+	rm $LOGZ_JSON
 
     return $?;
 }
